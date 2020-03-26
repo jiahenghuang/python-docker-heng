@@ -45,6 +45,41 @@ in my_sum,arg= (1, 2, 3, 4, 5)
 #dec() -> in_dec() -> my_sum()
 
 
+#coding:utf-8
+import re
+import logging
+logging.basicConfig(level = logging.INFO,format = '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
+class Load_Corpus_with_Iteration(object):
+    def __init__(self, path):
+        self.path = path
+ 
+    def __iter__(self):
+        for line in open(self.path):
+            yield line
 
+count = 0
+def text_log(func):
+	def wrapper(*args,**kwargs):
+		global count
+		count += 1
+		num = count % 100000
+		if num == 0:
+			float_num = count/363665769
+			logger.info('process:%.4f'%float_num)
+		return func(*args,**kwargs)
+	return wrapper
 
+@text_log
+def process_line(text):
+	fmt_pat = re.compile('[^a-zA-Z0-9一-龥，。？！：]+')
+	text = fmt_pat.sub('', text)
+	return text
+
+with open('processed_chat_corpus.txt','w') as fw:
+	corpus = Load_Corpus_with_Iteration('chat-corpus.txt')
+	for text in corpus:
+		text = process_line(text)
+		if text:
+			fw.write(text+'\n')
